@@ -1,193 +1,297 @@
-# 📊 RoomSense — Software Quality Testing Report
+# 🏥 MyBooking HPD — Room Booking System
 
-## 📌 Deskripsi Sistem
+> **Hospital Port Dickson** · Room & Facility Booking Management System
 
-**RoomSense** adalah sistem berbasis web untuk peminjaman ruangan kampus yang dikembangkan menggunakan:
-
-* **Backend**: Laravel 13
-* **Frontend**: Tailwind CSS, JavaScript
-* **Database**: MySQL
-
-Sistem ini mendukung dua peran utama:
-
-* **User**: melakukan booking ruangan dan melihat status
-* **Admin**: mengelola ruangan dan melakukan approval booking
+[![Laravel](https://img.shields.io/badge/Laravel-13-red?style=flat-square&logo=laravel)](https://laravel.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.x-blue?style=flat-square&logo=tailwindcss)](https://tailwindcss.com)
+[![PHP](https://img.shields.io/badge/PHP-8.3-purple?style=flat-square&logo=php)](https://php.net)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-orange?style=flat-square&logo=mysql)](https://mysql.com)
 
 ---
 
-## 🎯 Tujuan Pengujian
+## 📌 About
 
-Pengujian dilakukan untuk mengevaluasi kualitas sistem berdasarkan aspek:
+**MyBooking HPD** is a web-based room booking system built for **Hospital Port Dickson**. It streamlines the process of reserving rooms, meeting halls, and training facilities within the hospital complex.
 
-* Performance (Kinerja)
-* Reliability (Keandalan)
-* Usability (Kemudahan penggunaan)
-* Security (Keamanan)
-* Data Consistency (Konsistensi data)
-
-Pendekatan pengujian berfokus pada:
-
-* Skenario penggunaan nyata
-* Edge cases
-* Validasi logika sistem
-* Role-based access control
-
-> ⚠️ Catatan: Pengujian dilakukan pada lingkungan free hosting, sehingga tidak mencakup stress testing skala besar.
+The system replaces manual booking processes with a centralized digital platform, providing real-time availability, admin approvals, and automated notifications.
 
 ---
 
-## 🧪 Hasil Pengujian
+## 🎯 Key Features
 
-| No | Aspek Kualitas   | Skenario Uji                      | Hasil yang Diharapkan | Status                   |
-| -- | ---------------- | --------------------------------- | --------------------- | ------------------------ |
-| 1  | Performance      | Load halaman daftar ruangan       | < 2 detik             | ⚠️ Perlu optimasi        |
-| 2  | Performance      | Dashboard user dengan banyak data | Responsif             | ✅ Baik                   |
-| 3  | Performance      | Dashboard admin (banyak booking)  | < 2 detik             | ⚠️ Perlu optimasi query  |
-| 4  | Performance      | Upload banyak gambar              | Tidak timeout         | ⚠️ Tergantung hosting    |
-| 5  | Performance      | Rekomendasi ruangan alternatif    | Cepat & efisien       | ⚠️ Perlu optimasi        |
-| 6  | Reliability      | Booking di tanggal hari ini       | Valid                 | ⚠️ Risiko timezone       |
-| 7  | Reliability      | Validasi waktu booking            | Tidak boleh sama      | ✅ Valid                  |
-| 8  | Reliability      | Cancel booking approved           | Ditolak               | ✅ Valid                  |
-| 9  | Reliability      | Cancel booking user lain          | Ditolak (403)         | ✅ Aman                   |
-| 10 | Reliability      | Nonaktifkan ruangan aktif         | Konsisten             | ⚠️ Perlu notifikasi      |
-| 11 | Usability        | Login salah password              | Error jelas           | ✅ Baik                   |
-| 12 | Usability        | Booking dari detail ruangan       | Auto select           | ⚠️ UX bisa membingungkan |
-| 13 | Usability        | Approve booking                   | Berhasil & jelas      | ✅ Baik                   |
-| 14 | Usability        | Reject tanpa alasan               | Harus ditolak         | ⚠️ Validasi server perlu |
-| 15 | Usability        | Redirect berdasarkan role         | Benar                 | ✅ Baik                   |
-| 16 | Security         | Akses admin oleh user biasa       | Ditolak               | ✅ Aman                   |
-| 17 | Security         | Akses tanpa login                 | Redirect login        | ✅ Aman                   |
-| 18 | Security         | SQL Injection                     | Tidak berhasil        | ✅ Aman                   |
-| 19 | Security         | XSS                               | Tidak dieksekusi      | ✅ Aman                   |
-| 20 | Security         | CSRF attack                       | Ditolak               | ✅ Aman                   |
-| 21 | Security         | Mass assignment                   | Aman                  | ✅ Aman                   |
-| 22 | Security         | Upload file berbahaya             | Ditolak               | ✅ Aman                   |
-| 23 | Data Consistency | Double booking (pending)          | Masih diperbolehkan   | ✅ Sesuai desain          |
-| 24 | Data Consistency | Double approval (race condition)  | Harus dicegah         | ❌ Perlu perbaikan        |
-| 25 | Data Consistency | Hapus ruangan dengan histori      | Data tetap aman       | ⚠️ Perlu soft delete     |
+### 👤 For Users
+- 🔍 Browse available rooms with search & filter
+- 📅 Book rooms with real-time schedule view
+- 📊 Track booking status (pending / approved / rejected)
+- 🔔 Receive in-app notifications
+- 👤 Manage personal profile
+
+### 🛡️ For Admin (PIC Bilik)
+- ✅ Approve / reject booking requests
+- 🏢 Manage assigned rooms only
+- 📅 View room schedules in calendar
+- 📊 Monitor booking statistics
+
+### ⚡ For Super Admin
+- 👥 Manage all users (create, edit, assign roles)
+- 🏢 Manage all rooms (add, edit, delete)
+- ✅ Full booking approval access
+- 📅 System-wide calendar view
+- 🔐 Assign rooms to Admin PIC
 
 ---
 
-## 🔴 Temuan Utama
+## 🛠️ Tech Stack
 
-### 1. Potensi Race Condition pada Approval Booking
-
-Jika dua admin melakukan approval secara bersamaan pada booking yang konflik, sistem berpotensi menyetujui keduanya.
-
-**Dampak:**
-
-* Double booking pada waktu yang sama
-
----
-
-### 2. Validasi Alasan Penolakan (Reject) Belum Konsisten
-
-Validasi hanya dilakukan di sisi frontend (HTML), belum di backend.
-
-**Dampak:**
-
-* Booking bisa ditolak tanpa alasan
+| Layer | Technology |
+|-------|------------|
+| **Backend** | Laravel 13 |
+| **Frontend** | Tailwind CSS v4, Vanilla JavaScript, Alpine.js |
+| **Database** | MySQL 8.0 |
+| **Build Tool** | Vite 8 |
+| **Fonts** | Plus Jakarta Sans, Inter |
+| **Real-time** | Laravel Echo + Pusher |
 
 ---
 
-### 3. Optimasi Query (N+1 Problem)
+## ⚙️ Installation
 
-Beberapa fitur seperti:
+### Prerequisites
+- PHP 8.3+
+- Composer
+- Node.js 18+
+- MySQL
 
-* Daftar ruangan
-* Rekomendasi alternatif
+### Steps
 
-masih melakukan query berulang.
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-repo/mybooking-hpd.git
+cd mybooking-hpd
 
-**Dampak:**
+# 2. Install PHP dependencies
+composer install
 
-* Performa menurun saat data banyak
+# 3. Install Node dependencies
+npm install
 
----
+# 4. Copy environment file
+cp .env.example .env
 
-## 🛠️ Rekomendasi Perbaikan
+# 5. Generate application key
+php artisan key:generate
 
-### ✔ 1. Perbaikan Race Condition
+# 6. Configure database in .env
+# DB_DATABASE=mybooking_db
+# DB_USERNAME=root
+# DB_PASSWORD=
 
-Gunakan:
+# 7. Run migrations & seeders
+php artisan migrate --seed
 
-* Database transaction
-* Locking (`lockForUpdate()` jika memungkinkan)
+# 8. Build frontend assets
+npm run build
 
----
+# 9. Start the server
+php artisan serve
+For development with hot reload:
 
-### ✔ 2. Validasi Backend
+bash
+npm run dev
+👥 Demo Credentials
+Role	Email	Password
+⚡ Super Admin	superadmin@moh.gov.my	password
+🛡️ Admin PIC	admin.tanjungtuan@moh.gov.my	password
+👤 User	johndoe@moh.gov.my	password
+⚠️ Demo accounts are for testing purposes only. Change passwords in production.
 
-Tambahkan validasi:
+📊 Software Quality Testing Report
+📌 System Description
+MyBooking HPD was tested to evaluate the system's quality based on:
 
-* Alasan reject wajib diisi saat status = rejected
+⚡ Performance
 
----
+🔒 Reliability
 
-### ✔ 3. Optimasi Query
+🎨 Usability
 
-Gunakan:
+🛡️ Security
 
-* Eager loading (`with()`)
-* Query aggregation
-* Hindari loop query (N+1)
+📊 Data Consistency
 
----
+The testing approach focuses on real-world usage scenarios, edge cases, system logic validation, and role-based access control.
 
-### ✔ 4. Pengaturan Timezone
+Note: Testing was conducted on a free hosting environment, so it does not cover large-scale stress testing.
 
-Set:
+🧪 Test Results
+No	Quality Aspect	Test Scenario	Expected Result	Status
+1	Performance	Load room listing page	< 2 seconds	⚠️ Needs optimization
+2	Performance	User dashboard with lots of data	Responsive	✅ Good
+3	Performance	Admin dashboard (many bookings)	< 2 seconds	⚠️ Needs query optimization
+4	Performance	Upload many images	No timeout	⚠️ Depends on hosting
+5	Performance	Alternative room recommendations	Fast & efficient	⚠️ Needs optimization
+6	Reliability	Booking for today's date	Valid	⚠️ Timezone risk
+7	Reliability	Booking time validation	Cannot be the same	✅ Valid
+8	Reliability	Cancel approved booking	Rejected	✅ Valid
+9	Reliability	Cancel another user's booking	Rejected (403)	✅ Secure
+10	Reliability	Deactivate an active room	Consistent	⚠️ Needs notification
+11	Usability	Login with wrong password	Clear error	✅ Good
+12	Usability	Booking from room details	Auto select	⚠️ UX can be confusing
+13	Usability	Approve booking	Successful & clear	✅ Good
+14	Usability	Reject without reason	Must be rejected	⚠️ Server validation needed
+15	Usability	Redirect based on role	Correct	✅ Good
+16	Security	Admin access by regular user	Rejected	✅ Secure
+17	Security	Access without login	Redirect to login	✅ Secure
+18	Security	SQL Injection	Unsuccessful	✅ Secure
+19	Security	XSS	Not executed	✅ Secure
+20	Security	CSRF attack	Rejected	✅ Secure
+21	Security	Mass assignment	Secure	✅ Secure
+22	Security	Upload dangerous file	Rejected	✅ Secure
+23	Data Consistency	Double booking (pending)	Still allowed	✅ By design
+24	Data Consistency	Double approval (race condition)	Must be prevented	❌ Needs fixing
+25	Data Consistency	Delete room with history	Data remains safe	⚠️ Needs soft delete
+🔴 Key Findings
+1. Potential Race Condition in Booking Approval
+If two admins approve conflicting bookings simultaneously, the system could potentially approve both.
 
-```env
-APP_TIMEZONE=Asia/Jakarta
-```
+Impact:
 
----
+Double booking at the same time
 
-### ✔ 5. Gunakan Soft Delete
+Data inconsistency
 
-Agar histori data tidak hilang saat ruangan dihapus.
+Recommended Fix:
 
----
+php
+DB::transaction(function () use ($booking) {
+    $locked = Booking::where('id', $booking->id)->lockForUpdate()->first();
+    // Re-check conflict, then update status
+});
+2. Reject Reason Validation Is Inconsistent
+Validation is only done on the frontend (HTML), not on the backend.
 
-## 📊 Ringkasan Kualitas Sistem
+Impact:
 
-| Aspek            | Status               |
-| ---------------- | -------------------- |
-| Performance      | ⚠️ Perlu optimasi    |
-| Reliability      | ✅ Baik               |
-| Usability        | ✅ Baik               |
-| Security         | ✅ Aman               |
-| Data Consistency | ⚠️ Perlu peningkatan |
+Bookings can be rejected without a reason
 
----
+Recommended Fix:
 
-## 📈 Kesimpulan
+php
+$validated = $request->validate([
+    'status' => ['required', 'in:approved,rejected'],
+    'notes'  => ['required_if:status,rejected', 'nullable', 'string', 'max:500'],
+]);
+3. Query Optimization (N+1 Problem)
+Features such as room listing and alternative recommendations still perform repeated queries.
 
-Secara keseluruhan, sistem **RoomSense**:
+Impact:
 
-* ✔ Sudah berjalan dengan baik secara fungsional
-* ✔ Aman dari sisi keamanan dasar
-* ✔ Memiliki struktur sistem yang solid
+Performance degrades when there is a lot of data
 
-Namun masih terdapat beberapa hal yang perlu ditingkatkan:
+Recommended Fix:
 
-* Optimasi performa
-* Penanganan concurrency
-* Validasi backend
+php
+// Use eager loading
+$bookings = Booking::with(['user', 'room'])->paginate(10);
+🛠️ Improvement Recommendations
+No	Recommendation	Priority
+1	Fix race condition using database transactions & locking	🔴 High
+2	Add backend validation for reject reason	🔴 High
+3	Optimize queries with eager loading	🟡 Medium
+4	Configure timezone (APP_TIMEZONE=Asia/Kuala_Lumpur)	🟡 Medium
+5	Use soft delete for rooms	🟢 Low
+📊 System Quality Summary
+Aspect	Status
+⚡ Performance	⚠️ Needs optimization
+🔒 Reliability	✅ Good
+🎨 Usability	✅ Good
+🛡️ Security	✅ Secure
+📊 Data Consistency	⚠️ Needs improvement
+📈 Conclusion
+Overall, MyBooking HPD:
 
-Dengan perbaikan tersebut, sistem akan menjadi lebih stabil, scalable, dan siap digunakan dalam skenario nyata.
+✅ Functions well from a functional perspective
 
----
+✅ Is secure from a basic security standpoint
 
-## 📌 Keterkaitan dengan Daily Project 6
+✅ Has a solid system structure
 
-Pengujian ini dilakukan berdasarkan hasil analisis kompetitor pada Daily Project 6, yang menghasilkan identifikasi aspek kualitas utama:
+However, there are still several areas that need improvement:
 
-* Performance
-* Reliability
-* Usability
-* Security
-* Data Consistency
+⚡ Performance optimization
 
-Sehingga pengujian ini merupakan implementasi langsung dari kebutuhan kualitas sistem yang telah dianalisis sebelumnya.
+🔄 Concurrency handling
+
+🛡️ Backend validation
+
+With these improvements, the system will become more stable, scalable, and ready for real-world deployment.
+
+📁 Project Structure
+text
+mybooking-hpd/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Admin/
+│   │   │   │   ├── BookingController.php
+│   │   │   │   ├── RoomController.php
+│   │   │   │   └── UserController.php
+│   │   │   ├── Auth/
+│   │   │   ├── AuthController.php
+│   │   │   ├── BookingController.php
+│   │   │   ├── CalendarController.php
+│   │   │   ├── NotificationController.php
+│   │   │   ├── ProfileController.php
+│   │   │   └── RoomController.php
+│   │   └── Middleware/
+│   │       ├── IsAdmin.php
+│   │       └── IsSuper.php
+│   ├── Models/
+│   │   ├── Booking.php
+│   │   ├── Room.php
+│   │   └── User.php
+│   └── Notifications/
+├── database/
+│   ├── migrations/
+│   └── seeders/
+├── resources/
+│   ├── css/
+│   ├── js/
+│   └── views/
+│       ├── admin/
+│       ├── auth/
+│       ├── bookings/
+│       ├── calendar/
+│       ├── components/
+│       ├── layouts/
+│       ├── notifications/
+│       ├── profile/
+│       └── rooms/
+├── routes/
+│   └── web.php
+└── public/
+🎨 Design System
+Element	Value
+Primary Color	Purple #7c3aed
+Secondary	Indigo #6366f1
+Accent	Pink #ec4899, Cyan #06b6d4
+Background	#fafbff (soft white)
+Text Primary	#0f1419
+Border	#eef1f8
+Radius	0.875rem – 1.5rem
+Font	Plus Jakarta Sans
+📅 Related Projects
+This testing was conducted as part of Daily Project 6, based on competitor analysis that identified the main quality aspects:
+
+⚡ Performance
+
+🔒 Reliability
+
+🎨 Usability
+
+🛡️ Security
+
+📊 Data Consistency
+
+📄 License
+This project is developed for Hospital Port Dickson internal use.
