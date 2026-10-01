@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
+
+class AuthController extends Controller
+{
+    /**
+     * Show the login form.
+     */
+    public function showLoginForm(): View|RedirectResponse
+    {
+        Log::info('Showing login form');
+        if (Auth::check()) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            return $user->isAdmin()
+                ? redirect()->route('admin.bookings.index')
+                : redirect()->route('dashboard');
+        }
+
+        return view('auth.login');
+    }
+
+    /**
+     * Handle the login form submission.
+     */
+    public function login(Request $request): RedirectResponse
+    {
+        $credentials = $request->validate([
+            'email'    => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            if ($user->is_demo) {
+                session()->flash('warning', '⚠️ Akun Demo Publik: Jangan gunakan untuk data sensitif. Data booking dapat di-reset sewaktu-waktu. Notifikasi email tidak terkirim (log only).');
+            }
+
+            $intendedRoute = $user->isAdmin() ? route('admin.bookings.index') : route('dashboard');
+
+            return redirect()->intended($intendedRoute);
+        }
+
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
+    }
+
+    /**
+     * Log the user out.
+     */
+    public function logout(Request $request): RedirectResponse
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
+    }
+}
