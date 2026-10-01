@@ -66,7 +66,7 @@ The system replaces manual booking processes with a centralized digital platform
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-repo/mybooking-hpd.git
+git clone https://github.com/SabrinaRose12/mybookingHPD.git
 cd mybooking-hpd
 
 # 2. Install PHP dependencies
